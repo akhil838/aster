@@ -31,8 +31,9 @@ func Scan(ctx context.Context, root string, progressCh chan<- int64) (*Node, err
 	}
 
 	if !info.IsDir() {
-		rootNode.SetSize(info.Size())
-		sendProgress(ctx, progressCh, info.Size())
+		sz := diskSize(info)
+		rootNode.SetSize(sz)
+		sendProgress(ctx, progressCh, sz)
 		return rootNode, nil
 	}
 
@@ -199,14 +200,14 @@ func processBatch(
 				}
 
 				if entry.IsDir() {
+					childPath := dirPrefix + entry.Name()
 					localChildrenWg.Add(1)
 					globalWg.Add(1)
-					childPath := dirPrefix + entry.Name()
 					go scanDir(ctx, child, childPath, localChildrenWg, sem, progressCh, globalWg)
 				} else {
 					info, err := entry.Info()
 					if err == nil {
-						sz := info.Size()
+						sz := diskSize(info)
 						child.SetSize(sz)
 						localSize += sz
 					}

@@ -274,13 +274,14 @@ func TestScanSingleFile(t *testing.T) {
 		t.Fatal("expected file node, not dir")
 	}
 
-	if node.Size() != fileSizeMedium {
-		t.Errorf("Size() = %d, want %d", node.Size(), fileSizeMedium)
+	// Size reports actual disk usage (block-aligned), which is >= the logical size.
+	if node.Size() < fileSizeMedium {
+		t.Errorf("Size() = %d, want >= %d", node.Size(), fileSizeMedium)
 	}
 
 	val := <-progressCh
-	if val != fileSizeMedium {
-		t.Errorf("progress = %d, want %d", val, fileSizeMedium)
+	if val < fileSizeMedium {
+		t.Errorf("progress = %d, want >= %d", val, fileSizeMedium)
 	}
 }
 
